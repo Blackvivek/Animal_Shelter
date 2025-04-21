@@ -29,7 +29,10 @@
           v-model="formData.full_name" 
           required
           placeholder="Your full name"
+          :class="{ 'error': validationErrors.full_name }"
+          @blur="validateFullName"
         >
+        <p v-if="validationErrors.full_name" class="error-message">{{ validationErrors.full_name }}</p>
       </div>
 
       <div class="form-group">
@@ -40,7 +43,10 @@
           v-model="formData.email" 
           required
           placeholder="Your email address"
+          :class="{ 'error': validationErrors.email }"
+          @blur="validateEmail"
         >
+        <p v-if="validationErrors.email" class="error-message">{{ validationErrors.email }}</p>
       </div>
 
       <div class="form-group">
@@ -51,7 +57,11 @@
           v-model="formData.phone" 
           required
           placeholder="Your phone number"
+          :class="{ 'error': validationErrors.phone }"
+          @input="handlePhoneInput"
+          @blur="validatePhone"
         >
+        <p v-if="validationErrors.phone" class="error-message">{{ validationErrors.phone }}</p>
       </div>
 
       <div class="form-group">
@@ -62,12 +72,21 @@
           required
           placeholder="Your complete home address"
           rows="3"
+          :class="{ 'error': validationErrors.address }"
+          @blur="validateAddress"
         ></textarea>
+        <p v-if="validationErrors.address" class="error-message">{{ validationErrors.address }}</p>
       </div>
 
       <div class="form-group">
         <label for="housing">Housing Situation*</label>
-        <select id="housing" v-model="formData.housing_situation" required>
+        <select 
+          id="housing" 
+          v-model="formData.housing_situation" 
+          required 
+          :class="{ 'error': validationErrors.housing_situation }"
+          @change="validateHousingSituation"
+        >
           <option value="" disabled selected>Select your housing type</option>
           <option value="House">House</option>
           <option value="Apartment">Apartment</option>
@@ -75,16 +94,24 @@
           <option value="Mobile Home">Mobile Home</option>
           <option value="Other">Other</option>
         </select>
+        <p v-if="validationErrors.housing_situation" class="error-message">{{ validationErrors.housing_situation }}</p>
       </div>
 
       <div class="form-group">
         <label for="ownRent">Do you own or rent your home?*</label>
-        <select id="ownRent" v-model="formData.home_ownership" required>
+        <select 
+          id="ownRent" 
+          v-model="formData.home_ownership" 
+          required
+          :class="{ 'error': validationErrors.home_ownership }"
+          @change="validateHomeOwnership"
+        >
           <option value="" disabled selected>Select option</option>
           <option value="Own">Own</option>
           <option value="Rent">Rent</option>
           <option value="Other">Other</option>
         </select>
+        <p v-if="validationErrors.home_ownership" class="error-message">{{ validationErrors.home_ownership }}</p>
       </div>
 
       <div class="form-group">
@@ -117,7 +144,10 @@
           required
           placeholder="Tell us why you're interested in adopting this specific pet"
           rows="4"
+          :class="{ 'error': validationErrors.adoption_reason }"
+          @blur="validateAdoptionReason"
         ></textarea>
+        <p v-if="validationErrors.adoption_reason" class="error-message">{{ validationErrors.adoption_reason }}</p>
       </div>
 
       <div class="form-buttons">
@@ -145,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios'; // Make sure axios is installed
 import HomeButton from './HomeButton.vue';
@@ -175,6 +205,127 @@ const formData = ref({
   adoption_reason: '',
   animal_id: null
 });
+
+// Validation states
+const validationErrors = ref({
+  full_name: '',
+  email: '',
+  phone: '',
+  address: '',
+  housing_situation: '',
+  home_ownership: '',
+  adoption_reason: ''
+});
+
+// Validation rules
+const validateFullName = () => {
+  if (formData.value.full_name.trim().length < 3) {
+    validationErrors.value.full_name = 'Name must be at least 3 characters';
+    return false;
+  } else if (formData.value.full_name.trim().length > 100) {
+    validationErrors.value.full_name = 'Name must not exceed 100 characters';
+    return false;
+  } else if (!/^[a-zA-Z\s\-'\.]+$/.test(formData.value.full_name)) {
+    validationErrors.value.full_name = 'Name should contain only letters, spaces, hyphens, apostrophes and periods';
+    return false;
+  }
+  validationErrors.value.full_name = '';
+  return true;
+};
+
+const validateEmail = () => {
+  // RFC 5322 compliant email regex
+  const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  
+  if (!emailRegex.test(formData.value.email)) {
+    validationErrors.value.email = 'Please enter a valid email address';
+    return false;
+  }
+  validationErrors.value.email = '';
+  return true;
+};
+
+const validatePhone = () => {
+  // Allow common phone formats like (XXX) XXX-XXXX, XXX-XXX-XXXX, etc.
+  const phoneRegex = /^(\+\d{1,3}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+  
+  if (!phoneRegex.test(formData.value.phone)) {
+    validationErrors.value.phone = 'Please enter a valid phone number';
+    return false;
+  }
+  validationErrors.value.phone = '';
+  return true;
+};
+
+const validateAddress = () => {
+  if (formData.value.address.trim().length < 10) {
+    validationErrors.value.address = 'Please enter your full address (at least 10 characters)';
+    return false;
+  }
+  validationErrors.value.address = '';
+  return true;
+};
+
+const validateHousingSituation = () => {
+  if (!formData.value.housing_situation) {
+    validationErrors.value.housing_situation = 'Please select your housing situation';
+    return false;
+  }
+  validationErrors.value.housing_situation = '';
+  return true;
+};
+
+const validateHomeOwnership = () => {
+  if (!formData.value.home_ownership) {
+    validationErrors.value.home_ownership = 'Please select your home ownership status';
+    return false;
+  }
+  validationErrors.value.home_ownership = '';
+  return true;
+};
+
+const validateAdoptionReason = () => {
+  if (formData.value.adoption_reason.trim().length < 20) {
+    validationErrors.value.adoption_reason = 'Please provide a more detailed reason (at least 20 characters)';
+    return false;
+  }
+  validationErrors.value.adoption_reason = '';
+  return true;
+};
+
+// Combined validation function
+const validateForm = () => {
+  return (
+    validateFullName() &&
+    validateEmail() &&
+    validatePhone() &&
+    validateAddress() &&
+    validateHousingSituation() &&
+    validateHomeOwnership() &&
+    validateAdoptionReason()
+  );
+};
+
+// Auto-format phone number as user types
+const formatPhoneNumber = (value) => {
+  // Strip all non-numeric characters
+  const phoneDigits = value.replace(/\D/g, '');
+  
+  // Format based on length
+  if (phoneDigits.length <= 3) {
+    return phoneDigits;
+  } else if (phoneDigits.length <= 6) {
+    return `(${phoneDigits.slice(0, 3)}) ${phoneDigits.slice(3)}`;
+  } else {
+    return `(${phoneDigits.slice(0, 3)}) ${phoneDigits.slice(3, 6)}-${phoneDigits.slice(6, 10)}`;
+  }
+};
+
+// Handle phone input changes
+const handlePhoneInput = (event) => {
+  const formattedPhone = formatPhoneNumber(event.target.value);
+  formData.value.phone = formattedPhone;
+};
 
 onMounted(() => {
   // Get pet ID from route parameter
@@ -232,6 +383,12 @@ const closeModal = () => {
 
 const submitForm = async () => {
   try {
+    // Validate the form before submitting
+    if (!validateForm()) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
     // Make sure the fields match the backend's expected schema
     const adoptionData = {
       full_name: formData.value.full_name,
@@ -416,12 +573,45 @@ input, select, textarea {
   font-size: 1rem;
   color: #06202B;
   font-family: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Error state styling */
+input.error, select.error, textarea.error {
+  border-color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.05);
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+  display: block;
+  font-weight: 500;
+  padding-left: 0.2rem;
+  animation: errorFadeIn 0.3s ease-in-out;
+}
+
+@keyframes errorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: #077A7D;
   box-shadow: 0 0 0 2px rgba(7, 122, 125, 0.2);
+}
+
+/* Error focus state */
+input.error:focus, select.error:focus, textarea.error:focus {
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
 }
 
 textarea {

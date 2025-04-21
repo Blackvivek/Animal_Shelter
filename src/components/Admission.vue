@@ -39,7 +39,9 @@
           v-model="form.name" 
           required
           placeholder="Enter the animal's name"
+          @blur="validateName"
         />
+        <p v-if="validationErrors.name" class="error-message">{{ validationErrors.name }}</p>
       </div>
       
       <div class="form-group">
@@ -48,6 +50,7 @@
           id="type" 
           v-model="form.type" 
           required
+          @blur="validateType"
         >
           <option value="" disabled selected>Select animal type</option>
           <option value="Dog">Dog</option>
@@ -56,6 +59,7 @@
           <option value="Rabbit">Rabbit</option>
           <option value="Other">Other</option>
         </select>
+        <p v-if="validationErrors.type" class="error-message">{{ validationErrors.type }}</p>
       </div>
       
       <div class="form-group">
@@ -68,18 +72,22 @@
           step="0.1" 
           required
           placeholder="Enter animal's age in years"
+          @blur="validateAge"
         />
+        <p v-if="validationErrors.age" class="error-message">{{ validationErrors.age }}</p>
       </div>
       
       <div class="form-group">
         <label for="breed">Breed*</label>
         <input 
-          type="text" 
+          type="char" 
           id="breed" 
           v-model="form.breed" 
           required
           placeholder="Enter animal's breed"
+          @blur="validateBreed"
         />
+        <p v-if="validationErrors.breed" class="error-message">{{ validationErrors.breed }}</p>
       </div>
       
       <div class="form-group">
@@ -94,13 +102,14 @@
       
       <div class="form-group">
         <label for="health">Health Status*</label>
-        <select id="health" v-model="form.health_status" required>
+        <select id="health" v-model="form.health_status" required @blur="validateHealthStatus">
           <option value="" disabled selected>Select health status</option>
           <option value="Healthy">Healthy</option>
           <option value="Minor Issues">Minor Issues</option>
           <option value="Needs Treatment">Needs Treatment</option>
           <option value="Critical">Critical</option>
         </select>
+        <p v-if="validationErrors.health_status" class="error-message">{{ validationErrors.health_status }}</p>
       </div>
       
       <div class="form-group">
@@ -111,7 +120,9 @@
           required
           rows="4"
           placeholder="Provide details about the animal's personality, behavior, and any special needs"
+          @blur="validateDescription"
         ></textarea>
+        <p v-if="validationErrors.description" class="error-message">{{ validationErrors.description }}</p>
       </div>
       
       <div class="form-buttons">
@@ -135,6 +146,16 @@ const previewImage = ref(null);
 const error = ref(null);
 const isSubmitting = ref(false);
 
+// Validation states
+const validationErrors = ref({
+  name: '',
+  type: '',
+  age: '',
+  breed: '',
+  health_status: '',
+  description: ''
+});
+
 const form = ref({
   name: '',
   type: '',
@@ -146,9 +167,116 @@ const form = ref({
   image: null,
 });
 
+// Validation functions
+const validateName = () => {
+  if (!form.value.name.trim()) {
+    validationErrors.value.name = 'Name is required';
+    return false;
+  } else if (form.value.name.trim().length < 2) {
+    validationErrors.value.name = 'Name must be at least 2 characters';
+    return false;
+  } else if (form.value.name.trim().length > 50) {
+    validationErrors.value.name = 'Name must not exceed 50 characters';
+    return false;
+  }
+  validationErrors.value.name = '';
+  return true;
+};
+
+const validateType = () => {
+  if (!form.value.type) {
+    validationErrors.value.type = 'Animal type is required';
+    return false;
+  }
+  validationErrors.value.type = '';
+  return true;
+};
+
+const validateAge = () => {
+  if (form.value.age === null || form.value.age === '') {
+    validationErrors.value.age = 'Age is required';
+    return false;
+  } else if (isNaN(parseFloat(form.value.age))) {
+    validationErrors.value.age = 'Age must be a number';
+    return false;
+  } else if (parseFloat(form.value.age) < 0) {
+    validationErrors.value.age = 'Age cannot be negative';
+    return false;
+  } else if (parseFloat(form.value.age) > 100) {
+    validationErrors.value.age = 'Please enter a realistic age';
+    return false;
+  }
+  validationErrors.value.age = '';
+  return true;
+};
+
+const validateBreed = () => {
+  if (!form.value.breed.trim()) {
+    validationErrors.value.breed = 'Breed is required';
+    return false;
+  } else if (form.value.breed.trim().length < 2) {
+    validationErrors.value.breed = 'Breed must be at least 2 characters';
+    return false;
+  } else if (form.value.breed.trim().length > 100) {
+    validationErrors.value.breed = 'Breed must not exceed 100 characters';
+    return false;
+  }
+  validationErrors.value.breed = '';
+  return true;
+};
+
+const validateHealthStatus = () => {
+  if (!form.value.health_status) {
+    validationErrors.value.health_status = 'Health status is required';
+    return false;
+  }
+  validationErrors.value.health_status = '';
+  return true;
+};
+
+const validateDescription = () => {
+  if (!form.value.description.trim()) {
+    validationErrors.value.description = 'Description is required';
+    return false;
+  } else if (form.value.description.trim().length < 10) {
+    validationErrors.value.description = 'Description must be at least 10 characters';
+    return false;
+  } else if (form.value.description.trim().length > 1000) {
+    validationErrors.value.description = 'Description must not exceed 1000 characters';
+    return false;
+  }
+  validationErrors.value.description = '';
+  return true;
+};
+
+// Combined validation function
+const validateForm = () => {
+  const nameValid = validateName();
+  const typeValid = validateType();
+  const ageValid = validateAge();
+  const breedValid = validateBreed();
+  const healthStatusValid = validateHealthStatus();
+  const descriptionValid = validateDescription();
+
+  return nameValid && typeValid && ageValid && breedValid && healthStatusValid && descriptionValid;
+};
+
 const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      error.value = 'Image size must not exceed 5MB';
+      return;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      error.value = 'Only JPG, PNG, GIF, and WebP images are allowed';
+      return;
+    }
+    
     form.value.image = file;
     // Create image preview
     const reader = new FileReader();
@@ -156,11 +284,18 @@ const handleImageUpload = (event) => {
       previewImage.value = e.target.result;
     };
     reader.readAsDataURL(file);
+    error.value = null;
   }
 };
 
 const submitForm = async () => {
   try {
+    // Validate form before submitting
+    if (!validateForm()) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
     isSubmitting.value = true;
     error.value = null;
     
@@ -220,12 +355,17 @@ const resetForm = () => {
     age: null,
     breed: '',
     gender: '',
-    health_status: '',  // Changed from 'health' to 'health_status'
+    health_status: '',
     description: '',
     image: null,
   };
   previewImage.value = null;
   error.value = null;
+  
+  // Reset validation errors
+  Object.keys(validationErrors.value).forEach(key => {
+    validationErrors.value[key] = '';
+  });
 };
 </script>
 
@@ -364,12 +504,45 @@ input, select, textarea {
   font-size: 1rem;
   color: #06202B;
   font-family: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Error state styling */
+input.error, select.error, textarea.error {
+  border-color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.05);
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+  display: block;
+  font-weight: 500;
+  padding-left: 0.2rem;
+  animation: errorFadeIn 0.3s ease-in-out;
+}
+
+@keyframes errorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: #077A7D;
   box-shadow: 0 0 0 2px rgba(7, 122, 125, 0.2);
+}
+
+/* Error focus state */
+input.error:focus, select.error:focus, textarea.error:focus {
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
 }
 
 textarea {
@@ -409,13 +582,6 @@ button {
 
 .cancel-btn:hover {
   background-color: #F5EEDD;
-}
-
-.error-message {
-  color: red;
-  font-weight: bold;
-  margin-top: 1rem;
-  text-align: center;
 }
 
 /* Responsive adjustments */

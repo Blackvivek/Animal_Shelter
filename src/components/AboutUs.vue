@@ -40,7 +40,7 @@
                         <p>We rescue animals from abandonment, abuse, and neglect, providing immediate medical care and shelter.</p>
                     </div>
                     <div class="service-card">
-                        <div class="service-icon">❤️</div>
+                        <div class="service-icon">❤</div>
                         <h3>Rehabilitation</h3>
                         <p>Our team provides medical treatment, behavioral training, and socialization to prepare animals for adoption.</p>
                     </div>
@@ -84,24 +84,27 @@
             <div class="team-members">
                 <div class="team-member">
                     <div class="member-icon">
-                        <div class="icon">👩‍⚕️</div>
+                        <img src="../assets/images/girl.jpg" alt="Dr. Sarah Johnson" />
                     </div>
-                    <h3>Dr. Sarah Johnson</h3>
-                    <p class="member-title">Veterinarian & Founder</p>
+                    <h3>Aditi Koli</h3>
                 </div>
                 <div class="team-member">
                     <div class="member-icon">
-                        <div class="icon">👨‍🔬</div>
+                        <img src="../assets/images/girl2.jpg" alt="Michael Rodriguez" />
                     </div>
-                    <h3>Michael Rodriguez</h3>
-                    <p class="member-title">Animal Behaviorist</p>
+                    <h3>Harshda Kshirsagar</h3>
                 </div>
                 <div class="team-member">
                     <div class="member-icon">
-                        <div class="icon">👩‍💼</div>
+                        <img src="../assets/images/boy1.jpg" alt="Lisa Chen" />
                     </div>
-                    <h3>Lisa Chen</h3>
-                    <p class="member-title">Adoption Coordinator</p>
+                    <h3>Abhijeet Kumbhar</h3>
+                </div>
+                <div class="team-member">
+                    <div class="member-icon">
+                        <img src="../assets/images/boy2.jpg" alt="Emily Davis" />
+                    </div>
+                    <h3>Suyash Jagtap</h3>
                 </div>
             </div>
         </section>
@@ -353,18 +356,14 @@ h1, h2, h3 {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
-.member-icon .icon {
-    font-size: 80px;
-    color: #FFFFFF;
+.member-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .team-member h3 {
     margin-bottom: 0.5rem;
-}
-
-.member-title {
-    color: #077A7D;
-    font-weight: 600;
 }
 
 /* Get Involved Section */
