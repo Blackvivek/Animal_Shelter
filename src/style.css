@@ -1,0 +1,13 @@
+/* Global font styles */
+html,
+body {
+    font-family: "Roboto", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* Keep the roboto class for specific elements if needed */
+
+
+/* ...existing styles... */
