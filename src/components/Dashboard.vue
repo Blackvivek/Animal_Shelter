@@ -74,26 +74,41 @@
       </section>
 
       <!-- Cards Section -->
-      <div class="cards">
+      <div class="cards" v-if="loading">
+        <div v-for="i in 4" :key="i" class="card loading-card">
+          <div class="loading-image"></div>
+          <h3 class="loading-title"></h3>
+          <p class="loading-data"></p>
+        </div>
+      </div>
+      
+      <div class="cards" v-else-if="error">
+        <div class="error-message">
+          <p>{{ error }}</p>
+          <button @click="fetchStatistics" class="retry-button">Try Again</button>
+        </div>
+      </div>
+      
+      <div class="cards" v-else>
         <div class="card">
           <img src="/src/assets/images/allanimals.jpg" alt="Total Animals" />
           <h3>Total Animals</h3>
-          <p>300</p>
+          <p>{{ statistics.total_animals }}</p>
         </div>
         <div class="card">
           <img src="/src/assets/images/summershelter.jpg" alt="New Admissions" />
           <h3>New Admissions</h3>
-          <p>50</p>
+          <p>{{ statistics.new_admissions }}</p>
         </div>
         <div class="card clickable" @click="navigateToAdoption">
           <img src="/src/assets/images/adpotion.png" alt="Adopted Animals" />
           <h3>Adopted Animals</h3>
-          <p>120</p>
+          <p>{{ statistics.adopted_animals }}</p>
         </div>
         <div class="card">
           <img src="/src/assets/images/animalrescue.png" alt="Rescued Animals" />
           <h3>Rescued Animals</h3>
-          <p>150</p>
+          <p>{{ statistics.rescued_animals }}</p>
         </div>
       </div>
     </main>
@@ -101,13 +116,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
 
 // Sidebar toggle state - starting with sidebar collapsed
 const isLeftSidebarCollapsed = ref(true);
+
+// API data states
+const statistics = ref({
+  total_animals: 0,
+  new_admissions: 0,
+  adopted_animals: 0,
+  rescued_animals: 0
+});
+const loading = ref(true);
+const error = ref(null);
 
 // Toggle function
 const toggleLeftSidebar = () => {
@@ -118,6 +144,41 @@ const toggleLeftSidebar = () => {
 const navigateToAdoption = () => {
   router.push('/adoption');
 };
+
+// Function to fetch statistics from the API
+const fetchStatistics = async () => {
+  loading.value = true;
+  error.value = null;
+  
+  try {
+    const response = await axios.get('http://localhost:8000/api/v1/statistics/');
+    statistics.value = response.data;
+    loading.value = false;
+  } catch (err) {
+    console.error('Error fetching shelter statistics:', err);
+    error.value = 'Unable to load statistics. Please try again.';
+    loading.value = false;
+    
+    // Fallback to hardcoded data if API fetch fails
+    try {
+      const fallbackResponse = await axios.get('http://localhost:8000/api/v1/statistics/fallback');
+      statistics.value = fallbackResponse.data;
+      error.value = null;
+    } catch (fallbackErr) {
+      console.error('Even fallback statistics failed:', fallbackErr);
+      // Use default values as last resort
+      statistics.value = {
+        total_animals: 300,
+        new_admissions: 50,
+        adopted_animals: 120,
+        rescued_animals: 150
+      };
+    }
+  }
+};
+
+// Fetch data when component mounts
+onMounted(fetchStatistics);
 </script>
 
 <style scoped>
@@ -366,5 +427,83 @@ body {
   height: 5px;
   background-color: #7AE2CF; /* Light mint dot indicator */
   border-radius: 50%;
+}
+
+/* Loading card animation styles */
+.loading-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0.5) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%);
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.loading-image {
+  width: 100%;
+  height: 150px;
+  background-color: #e2e2e2;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.loading-title {
+  width: 70%;
+  height: 1.5rem;
+  background-color: #e2e2e2;
+  margin-bottom: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.loading-data {
+  width: 40%;
+  height: 1.5rem;
+  background-color: #e2e2e2;
+  margin-top: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.error-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #e74c3c;
+  padding: 2rem;
+}
+
+.retry-button {
+  background-color: #077A7D;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin-top: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.retry-button:hover {
+  background-color: #06202B;
 }
 </style>

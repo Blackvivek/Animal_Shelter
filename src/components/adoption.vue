@@ -82,6 +82,13 @@ const fetchPets = async () => {
     // Filter only animals that are available for adoption
     const availableAnimals = response.data.filter(animal => !animal.is_adopted);
     
+    if (availableAnimals.length === 0) {
+      // No pets available for adoption
+      error.value = 'No pets are currently available for adoption. Please check back later!';
+      loading.value = false;
+      return;
+    }
+    
     pets.value = availableAnimals.map(pet => ({
       ...pet,
       // Make sure image_path exists
